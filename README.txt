@@ -23,12 +23,12 @@ chmod +x start.sh
 !!! Para criar a instância do chatwoot, será necessário, antes acessar o chatwoot, criar sua conta para obter o token do usuário...
 !!! Ao acessar o manager da evolution-api, será solicitado uma key, a mesma é o conteúdo da varíavel AUTHENTICATION_API_KEY...
 
-Dados acaso você usou apenas o start.sh:
+Dados acaso você usou apenas o start.sh e não modificou arquivos de configuração:
 Evolution (http://localhost:8080/manager):
 Key: b5e1a8c0-ae8d-4642-9666-6abe8e15723f
 
 Chatwoot (http://localhost:8081/installation/onboarding):
- - Exemplo usuário:
+ - Exemplo dados para criar usuário no chatwoot:
   ID: 2
   Token: W2gH4fbXRW1DxdpN19xMRJe5 (Esse token você obtém através das configurações do usuário)
   teste@teste.com

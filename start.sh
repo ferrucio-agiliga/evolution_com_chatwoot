@@ -9,9 +9,10 @@ echo "KO - $1"
 exit 1
 }
 
-rm -r database/* && msg_ok 'excluir database/*'
+rm -r database && msg_ok 'excluir database'
 rm -r evolution-api/evolution_instances && msg_ok 'evolution-api/evolution_instances'
 
+mkdir database || msg_ko 'criar pasta database' && msg_ok 'criar pasta database'
 mkdir database/chatwoot || msg_ko 'criar pasta database/chatwoot' && msg_ok 'criar pasta database/chatwoot'
 mkdir database/chatwoot/postgres || msg_ko 'criar pasta database/chatwoot/postgres' && msg_ok 'criar pasta database/chatwoot/postgres'
 mkdir database/chatwoot/postgressql || msg_ko 'criar pasta database/chatwoot/postgressql' && msg_ok 'criar pasta database/chatwoot/postgressql'

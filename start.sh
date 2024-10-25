@@ -2,8 +2,6 @@
 
 function msg_ok () {
 echo "OK - $1"
-sleep 1
-clear
 }
 
 function msg_ko () {
@@ -25,5 +23,5 @@ mkdir database/evolution/postgressql || msg_ko 'criar pasta database/evolution/p
 mkdir database/evolution/redis || msg_ko 'criar pasta database/evolution/redis' && msg_ok 'criar pasta database/evolution/redis'
 
 docker-compose up -d || msg_ko 'subir o docker-compose' && msg_ok 'subir o docker-compose'
-echo 'Aguardando 10 segundos' && sleep 10
+echo 'Aguardando 10 segundos para subir umas coisas...' && sleep 10
 docker-compose run --rm rails bundle exec rails db:chatwoot_prepare || msg_ko 'executar preparação de banco do chatwoot' && msg_ok 'executar preparação de banco do chatwoot'

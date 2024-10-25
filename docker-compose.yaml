@@ -1,0 +1,149 @@
+services:
+  base: &base
+    image: sendingtk/chatwoot:v3.12.6
+    container_name: chatwoot
+    hostname: lchatwoot
+    depends_on:
+      - postgres-chatwoot
+      - redis-chatwoot
+      - rails
+      - sidekiq
+    env_file: .env 
+    stdin_open: true 
+    tty: true  
+    networks: 
+      - evolution-network     
+  
+  rails:
+    <<: *base
+    container_name: chatwoot-rails
+    hostname: chatwoot-rails
+    depends_on:
+      - postgres-chatwoot
+      - redis-chatwoot
+    environment:
+      - NODE_ENV=production
+      - RAILS_ENV=production
+    networks: 
+      - evolution-network
+    entrypoint: docker/entrypoints/rails.sh
+    command: ['bundle', 'exec', 'rails', 's', '-p', '3000', '-b', '0.0.0.0']
+
+  sidekiq:
+    <<: *base
+    container_name: chatwoot-sidekiq
+    hostname: chatwoot-sidekiq
+    depends_on:
+      - postgres-chatwoot
+      - redis-chatwoot
+    environment:
+      - NODE_ENV=production
+      - RAILS_ENV=production
+    networks: 
+      - evolution-network
+    restart: unless-stopped
+    command: ['bundle', 'exec', 'sidekiq', '-C', 'config/sidekiq.yml']
+
+  postgres-chatwoot:
+    image: postgres:14
+    container_name: postgres-chatwoot
+    hostname: postgres-chatwoot
+    restart: always
+    volumes:
+      - ./database/chatwoot/postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=chatwoot
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=chatwoot
+    networks: 
+      - evolution-network
+    
+  postgres-evolution:
+    image: postgres:14
+    container_name: postgres-evolution
+    hostname: postgres-evolution
+    restart: always
+    volumes:
+      - ./database/evolution/postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=evolution
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=evolution
+    networks: 
+      - evolution-network
+  
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: chatwoot-pgadmin4
+    hostname: chatwoot-pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "demo@demo.com.br"
+      PGADMIN_DEFAULT_PASSWORD: "PgAdmin2021!"
+    depends_on:
+      - postgres-chatwoot
+      - postgres-evolution
+    networks:
+      - evolution-network
+
+  redis-chatwoot:
+    image: redis:alpine
+    container_name: redis-chatwoot
+    hostname: redis-chatwoot
+    restart: always
+    command: ["sh", "-c", "redis-server --requirepass \"$REDIS_PASSWORD\""]
+    env_file: .env
+    volumes:
+      - ./database/chatwoot/redis:/data
+    networks: 
+      - evolution-network
+
+  redis-evolution:
+    image: redis:alpine
+    container_name: redis-evolution
+    hostname: redis-evolution
+    restart: always
+    command: [ "redis-server", "--appendonly", "yes", "--port", "6379" ]
+    env_file:
+      - ./evolution-api/.env
+    volumes:
+      - ./database/evolution/redis:/data
+    networks: 
+      - evolution-network
+  
+  evolution:
+    image: atendai/evolution-api:v2.1.0
+    container_name: evolution-api
+    restart: always
+    depends_on:
+      - postgres-evolution
+      - redis-evolution
+      - rails
+      - sidekiq
+    volumes:
+      - ./evolution-api/evolution_instances:/evolution/instances
+    networks:
+      - evolution-network
+    env_file:
+      - ./evolution-api/.env
+
+  nginx:
+    build: 
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: nginx
+    entrypoint: nginx -g "daemon off;"
+    ports:
+      - "8080:8080" #Evolution
+      - "8081:8081" #Chatwoot
+      - "8082:8082" #pgadmin
+    networks: 
+      - evolution-network
+    depends_on:
+      - base
+      - evolution
+      - pgadmin
+
+networks: 
+  evolution-network:
+    name: evolution-network
+    driver: bridge
